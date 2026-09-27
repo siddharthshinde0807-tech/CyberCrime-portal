@@ -4,15 +4,26 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
-// This line allows Render to assign a live port, while keeping 3000 for local testing
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// Temporary in-memory database (starts empty)
+// Serve static files from both public folder AND root directory
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
+
+// Temporary in-memory database
 let reports = [];
+
+// Fallback route to serve index.html wherever it is located
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+        if (err) {
+            res.sendFile(path.join(__dirname, 'index.html'));
+        }
+    });
+});
 
 // 1. Submit Report API
 app.post('/api/reports', (req, res) => {
