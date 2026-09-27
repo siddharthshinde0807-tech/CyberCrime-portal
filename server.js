@@ -28,8 +28,14 @@ app.get('/', (req, res) => {
 // 1. Submit Report API
 app.post('/api/reports', (req, res) => {
     const { category, description, date, reporter } = req.body;
-    if (!category || !description) {
-        return res.status(400).json({ error: "Category and Description are required." });
+    
+    // Check if reporter field exists and has both Name & Surname
+    const nameParts = reporter ? reporter.trim().split(/\s+/) : [];
+    
+    if (!category || !description || !reporter || nameParts.length < 2) {
+        return res.status(400).json({ 
+            error: "Category, Description, and Full Name (First Name & Surname) are required." 
+        });
     }
     
     const newReport = {
@@ -37,7 +43,7 @@ app.post('/api/reports', (req, res) => {
         category: category,
         description: description,
         date: date || new Date().toISOString().split('T')[0],
-        reporter: reporter || "Anonymous",
+        reporter: reporter.trim(),
         status: "Pending",
         createdAt: new Date().toISOString()
     };
@@ -45,6 +51,7 @@ app.post('/api/reports', (req, res) => {
     reports.push(newReport);
     res.status(201).json({ message: "Report submitted successfully!", report: newReport });
 });
+
 
 // 2. Get All Reports API
 app.get('/api/reports', (req, res) => {
