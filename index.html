@@ -265,17 +265,32 @@
             document.getElementById('adminLoginModal').classList.add('hidden');
         }
 
-        function verifyPin() {
-            const pin = document.getElementById('adminPinInput').value;
-            if (pin === "1930") { // Your secure PIN
-                closeAdminModal();
-                showTab('admin');
-            } else {
-                // Show error message directly inside the modal
-                document.getElementById('pinError').classList.remove('hidden');
-                document.getElementById('adminPinInput').value = '';
-            }
+        async function verifyPin() {
+    const pinInput = document.getElementById('adminPinInput').value;
+    const errorElement = document.getElementById('pinError');
+
+    try {
+        const res = await fetch('/api/admin/verify-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: pinInput })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            closeAdminModal();
+            showTab('admin');
+        } else {
+            errorElement.innerText = data.error || "Incorrect PIN";
+            errorElement.classList.remove('hidden');
+            document.getElementById('adminPinInput').value = '';
         }
+    } catch (err) {
+        alert("Server authentication error. Try again.");
+    }
+}
+
 
 
         function showTab(tabId) {
