@@ -135,9 +135,10 @@
                         <input type="date" id="incidentDate" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">Complainant Name (Optional)</label>
-                        <input type="text" id="reporter" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" placeholder="Leave blank to remain anonymous">
-                    </div>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Complainant Full Name *</label>
+               <input type="text" id="complainantName" placeholder="Enter Name & Surname (e.g. Rahul Sharma)" class="w-full border border-slate-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                </div>
+
                 </div>
 
                 <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-3 rounded-lg shadow-md transition-all flex items-center justify-center space-x-2">
@@ -292,34 +293,7 @@
             if (tabId === 'admin') loadAdminDashboard();
         }
 
-        async function submitReport(e) {
-            e.preventDefault();
-            const payload = {
-                category: document.getElementById('category').value,
-                description: document.getElementById('description').value,
-                date: document.getElementById('incidentDate').value,
-                reporter: document.getElementById('reporter').value
-            };
-            
-            try {
-                const res = await fetch('/api/reports', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                document.getElementById('reportResult').innerHTML = 
-                    `<div class="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 rounded-xl shadow-sm text-xs">
-                        <p class="font-bold text-sm">Report Registered Successfully!</p>
-                        <p class="mt-1">Your unique tracking code is <span class="font-mono bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold">${data.report.id}</span>. Please copy this code to check your case status.</p>
-                    </div>`;
-                document.getElementById('crimeForm').reset();
-            } catch (err) {
-                alert("Failed to connect to backend server.");
-            }
-        }
-
-        async function trackReport() {
+                async function trackReport() {
             const id = document.getElementById('trackId').value.trim();
             if(!id) return alert("Please enter a valid Reference ID.");
 
@@ -346,6 +320,35 @@
                 resultDiv.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-xs">${data.error}</div>`;
             }
         }
+async function submitReport(e) {
+    e.preventDefault();
+
+    const category = document.getElementById('category').value;
+    const description = document.getElementById('description').value;
+    const date = document.getElementById('incidentDate').value;
+    const reporter = document.getElementById('complainantName').value.trim();
+
+    // Check if name contains at least two words (Name & Surname)
+    const nameParts = reporter.split(/\s+/);
+    if (nameParts.length < 2 || nameParts[0].length === 0 || nameParts[1].length === 0) {
+        alert("Please enter both your First Name and Surname (e.g., Rahul Sharma).");
+        return;
+    }
+
+    const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, description, date, reporter })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+        document.getElementById('reportResult').innerHTML = `<div class="bg-green-100 border border-green-300 text-green-800 p-3 rounded-lg text-sm mt-3">Report Registered! Reference Code: <b>${data.report.id}</b></div>`;
+        document.getElementById('crimeForm').reset();
+    } else {
+        alert(data.error);
+    }
+}
 
         async function loadAdminDashboard() {
             try {
